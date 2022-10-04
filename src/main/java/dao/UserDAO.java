@@ -51,16 +51,16 @@ public class UserDAO implements IUserDAO {
         }
     }
 
-    Connection connection = null;
-    PreparedStatement callableStatement = null;
-    PreparedStatement preparedStatement = null;
+//    Connection connection = null;
+//    PreparedStatement callableStatement = null;
+//    PreparedStatement preparedStatement = null;
 
     @Override
     public void insertUser(User user) throws SQLException {
         System.out.println(INSERT_USERS_SQL);
         try {
-            connection = getConnection();
-            preparedStatement = connection.prepareStatement(INSERT_USERS_SQL);
+            Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USERS_SQL);
             preparedStatement.setString(1, user.getName());
             preparedStatement.setString(2, user.getEmail());
             preparedStatement.setString(3, user.getCountry());
@@ -75,8 +75,8 @@ public class UserDAO implements IUserDAO {
     public User selectUser(int id) {
         User user = null;
         try {
-            connection = getConnection();
-            preparedStatement = connection.prepareStatement(SELECT_USER_BY_ID);
+            Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_USER_BY_ID);
             preparedStatement.setInt(1, id);
             System.out.println(preparedStatement);
             ResultSet rs = preparedStatement.executeQuery();
@@ -97,8 +97,8 @@ public class UserDAO implements IUserDAO {
     public List<User> selectAllUser() {
         List<User> users = new ArrayList<>();
         try {
-            connection = getConnection();
-            preparedStatement = connection.prepareStatement(SELECT_ALL_USERS);
+            Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_USERS);
             System.out.println(preparedStatement);
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
@@ -118,8 +118,8 @@ public class UserDAO implements IUserDAO {
     public boolean deleteUser(int id) throws SQLException {
         boolean rowDeleted;
         try {
-            connection = getConnection();
-            preparedStatement = connection.prepareStatement(DELETE_USERS_SQL);
+            Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(DELETE_USERS_SQL);
             preparedStatement.setInt(1, id);
             rowDeleted = preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -132,8 +132,8 @@ public class UserDAO implements IUserDAO {
     public boolean updateUser(User user) throws SQLException {
         boolean rowUpdated;
         try {
-            connection = getConnection();
-            preparedStatement = connection.prepareStatement(UPDATE_USERS_SQL);
+            Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_USERS_SQL);
             preparedStatement.setString(1, user.getName());
             preparedStatement.setString(2, user.getEmail());
             preparedStatement.setString(3, user.getCountry());
@@ -148,7 +148,8 @@ public class UserDAO implements IUserDAO {
     @Override
     public List<User> selectByCountry(String country) throws SQLException {
         List<User> foundUsersByCountry = new ArrayList<>();
-        connection = getConnection();
+        Connection connection = getConnection();
+        PreparedStatement preparedStatement = null;
         try {
             preparedStatement = connection.prepareStatement(FIND_BY_COUNTRY);
         } catch (SQLException e) {
@@ -167,15 +168,15 @@ public class UserDAO implements IUserDAO {
         User user = null;
         String query = "{CALL get_user_by_id(?)}";
         try {
-            connection = getConnection();
-            callableStatement = connection.prepareStatement(query);
-            callableStatement.setInt(1,id);
+            Connection connection = getConnection();
+            PreparedStatement callableStatement = connection.prepareStatement(query);
+            callableStatement.setInt(1, id);
             ResultSet rs = callableStatement.executeQuery();
-            while (rs.next()){
+            while (rs.next()) {
                 String name = rs.getString("name");
                 String email = rs.getString("email");
                 String country = rs.getString("country");
-                user = new User(id,name,email,country);
+                user = new User(id, name, email, country);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -187,8 +188,8 @@ public class UserDAO implements IUserDAO {
     public void insertUserStore(User user) throws SQLException {
         String query = "{CALL insert_user(?,?,?)}";
         try {
-            connection = getConnection();
-            callableStatement = connection.prepareStatement(query);
+            Connection connection = getConnection();
+            CallableStatement callableStatement = connection.prepareCall(query);
             callableStatement.setString(1, user.getName());
             callableStatement.setString(2, user.getEmail());
             callableStatement.setString(3, user.getCountry());
@@ -199,63 +200,129 @@ public class UserDAO implements IUserDAO {
         }
     }
 
+//    @Override
+
+//    public void addUserTransaction(User user, int[] permisions) {
+//        Connection conn = null;
+//        // for insert a new user
+//        PreparedStatement pstmt = null;
+//        // for assign permision to user
+//        PreparedStatement pstmtAssignment = null;
+//        // for getting user id
+//        ResultSet rs = null;
+//        try {
+//            conn = getConnection();
+//            // set auto commit to false
+//            conn.setAutoCommit(false);
+//            //
+//            // Insert user
+//            //
+//            pstmt = conn.prepareStatement(INSERT_USERS_SQL, Statement.RETURN_GENERATED_KEYS);
+//            pstmt.setString(1, user.getName());
+//            pstmt.setString(2, user.getEmail());
+//            pstmt.setString(3, user.getCountry());
+//            int rowAffected = pstmt.executeUpdate();
+//            // get user id
+//            rs = pstmt.getGeneratedKeys();
+//            int userId = 0;
+//            if (rs.next())
+//                userId = rs.getInt(1);
+//            //
+//            // in case the insert operation successes, assign permision to user
+//            //
+//            if (rowAffected == 1) {
+//                // assign permision to user
+//                String sqlPivot = "INSERT INTO user_permision(user_id,permision_id) " + "VALUES(?,?)";
+//                pstmtAssignment = conn.prepareStatement(sqlPivot);
+//                for (int permisionId : permisions) {
+//                    pstmtAssignment.setInt(1, userId);
+//                    pstmtAssignment.setInt(2, permisionId);
+//                    pstmtAssignment.executeUpdate();
+//                }
+//                conn.commit();
+//            } else {
+//                conn.rollback();
+//            }
+//        } catch (SQLException ex) {
+//            // roll back the transaction
+//            try {
+//                if (conn != null)
+//                    conn.rollback();
+//            } catch (SQLException e) {
+//                System.out.println(e.getMessage());
+//            }
+//            System.out.println(ex.getMessage());
+//        } finally {
+//            try {
+//                if (rs != null) rs.close();
+//                if (pstmt != null) pstmt.close();
+//                if (pstmtAssignment != null) pstmtAssignment.close();
+//                if (conn != null) conn.close();
+//            } catch (SQLException e) {
+//                System.out.println(e.getMessage());
+//            }
+//        }
+//    }
+
+
     @Override
     public void addUserTransaction(User user, int[] permisions) {
         PreparedStatement ps = null;
+        PreparedStatement preparedStatement = null;
         ResultSet rs = null;
+        Connection connection = null;
         try {
             connection = getConnection();
             connection.setAutoCommit(false);
-            preparedStatement = connection.prepareStatement(INSERT_USERS_SQL,Statement.RETURN_GENERATED_KEYS);
-            preparedStatement.setString(1,user.getName());
-            preparedStatement.setString(2,user.getEmail());
-            preparedStatement.setString(3,user.getCountry());
+            preparedStatement = connection.prepareStatement(INSERT_USERS_SQL, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, user.getName());
+            preparedStatement.setString(2, user.getEmail());
+            preparedStatement.setString(3, user.getCountry());
             int rowAffected = preparedStatement.executeUpdate();
 
             rs = preparedStatement.getGeneratedKeys();
             int userId = 0;
-            if (rs.next()){
+            if (rs.next()) {
                 userId = rs.getInt(1);
             }
-            if (rowAffected ==1 ){
-                String sqlPivot ="INSERT INTO user_permision(user_id,permision_id) + VALUES(?,?)";
+            if (rowAffected == 1) {
+                String sqlPivot = "INSERT INTO user_permision(user_id,permision_id)" + "VALUES(?,?)";
                 ps = connection.prepareStatement(sqlPivot);
-                for (int permisionId : permisions){
-                    ps.setInt(1,userId);
-                    ps.setInt(2,permisionId);
+                for (int permisionId : permisions) {
+                    ps.setInt(1, userId);
+                    ps.setInt(2, permisionId);
                     ps.executeUpdate();
                 }
                 connection.commit();
-            }
-            else {
+            } else {
                 connection.rollback();
             }
         } catch (SQLException ex) {
             try {
-                if (connection != null){
+                if (connection != null) {
                     connection.rollback();
                 }
             } catch (SQLException e) {
-               System.out.println(e.getMessage());
+                System.out.println(e.getMessage());
             }
             System.out.println(ex.getMessage());
-        }
-        finally {
+        } finally {
             try {
-                if (rs != null){
+                if (rs != null) {
                     rs.close();
                 }
-                if (preparedStatement != null){
+                if (preparedStatement != null) {
                     preparedStatement.close();
                 }
-                if (ps != null){
+                if (ps != null) {
                     ps.close();
                 }
-                if (connection != null){
+                if (connection != null) {
                     connection.close();
                 }
             } catch (SQLException e) {
-                System.out.println(e.getMessage());;
+                System.out.println(e.getMessage());
+                ;
             }
         }
     }
