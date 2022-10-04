@@ -23,4 +23,6 @@ public interface IUserDAO {
     void insertUserStore(User user) throws SQLException;
 
     void addUserTransaction(User user,int[] permisions);
+
+    void insertUpdateWithoutTransaction();
 }
