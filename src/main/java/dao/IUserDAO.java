@@ -25,4 +25,5 @@ public interface IUserDAO {
     void addUserTransaction(User user,int[] permisions);
 
     void insertUpdateWithoutTransaction();
+    void insertUpdateUseTransaction();
 }
